@@ -5,9 +5,14 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
+import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.Model;
+import it.polito.tdp.itunes.model.Track;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -32,7 +37,7 @@ public class FXMLController {
     private Button btnPlaylist; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGenere"
-    private ComboBox<?> cmbGenere; // Value injected by FXMLLoader
+    private ComboBox<Genre> cmbGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtDTOT"
     private TextField txtDTOT; // Value injected by FXMLLoader
@@ -48,11 +53,59 @@ public class FXMLController {
 
     @FXML
     void doCalcolaPlaylist(ActionEvent event) {
-
+    	String input = txtDTOT.getText();
+    	if (input.compareTo("")==0) {
+    		txtResult.setText("Inserisci una durata massima");
+    		return;
+    	}
+    	double durata = 0;
+    	try {
+    		durata = Double.parseDouble(input);
+    	}catch(NumberFormatException e) {
+    		txtResult.setText("La durata deve essere un numero");
+    		return;
+    	}
+    	txtResult.appendText("\n La mia Playlist è formata da: "+"\n");
+    	List<Track> lista = model.calcolaPercorso(durata);
+    	for (Track t : lista) {
+    		txtResult.appendText(t+"\n");
+    	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	Genre genere = cmbGenere.getValue();
+    	if (genere.equals(null)) {
+    		txtResult.setText("Seleziona un genere");
+    		return;
+    	}
+    	String input1 = txtMin.getText();
+    	String input2 = txtMax.getText();
+    	if (input1.compareTo("")==0 || input2.compareTo("")==0) {
+    		txtResult.appendText("Inserisci un minimo e un massimo");
+    		return;
+    	}
+    	double min=0;
+    	double max =0;
+    	try {
+    		min = Double.parseDouble(input1);
+    		max = Double.parseDouble(input2);
+    	} catch(NumberFormatException e ) {
+    		txtResult.setText("Devono essere due numeri");
+    		return;
+    	}
+    	if (min<model.getMin(genere) || max>model.getMax(genere)) {
+    		txtResult.setText("Il minimo e massimo devono essere compresi tra i valori presenti nel db");
+    		return;
+    	}
+    	model.creaGrafo(min, max, genere);
+    	txtResult.appendText("Verici: "+ model.getV()+"\n");
+    	txtResult.appendText("Archi: "+ model.getA()+ "\n");
+    	List<Set<Track>> connesse = model.getConnesse();
+    	for (Set<Track> set :connesse ) {
+    		List<Track> track = new ArrayList<>(set);
+    		txtResult.appendText("Componente con "+ set.size()+" vertici e "+ model.getP(min, max, genere, track.get(0)) +"\n");
+    	}
 
     }
 
@@ -70,6 +123,7 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	cmbGenere.getItems().addAll(model.getGeneri());
     }
 
 }

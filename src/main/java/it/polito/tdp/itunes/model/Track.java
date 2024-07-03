@@ -1,6 +1,6 @@
 package it.polito.tdp.itunes.model;
 
-public class Track {
+public class Track implements Comparable<Track> {
 	private Integer trackId;
 	private String name;
 	private String composer;
@@ -83,6 +83,11 @@ public class Track {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	@Override
+	public int compareTo(Track o) {
+		return this.milliseconds-o.milliseconds;
 	}
 	
 	
